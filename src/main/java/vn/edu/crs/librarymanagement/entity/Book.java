@@ -1,6 +1,7 @@
 package vn.edu.crs.librarymanagement.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "books")
@@ -30,6 +31,9 @@ public class Book {
 
     @Column(name = "available_copies", nullable = false)
     private Integer availableCopies;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal price;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -65,6 +69,8 @@ public class Book {
     public void setTotalCopies(Integer totalCopies) { this.totalCopies = totalCopies; }
     public Integer getAvailableCopies() { return availableCopies; }
     public void setAvailableCopies(Integer availableCopies) { this.availableCopies = availableCopies; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 }

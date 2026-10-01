@@ -36,6 +36,20 @@ $env:DB_PASSWORD = "mật_khẩu_MySQL_của_bạn"
 - Chỉ phiếu đang mượn và chưa quá hạn mới được gia hạn; số lần và số ngày gia hạn lấy từ cấu hình.
 - Người dùng có thể trả sách trực tiếp trong trang `Sach toi da muon`; hệ thống kiểm tra đúng chủ phiếu trước khi xử lý.
 - Khi trả sách, hệ thống hoàn lại tồn kho. Nếu trả quá hạn, hệ thống tự tạo một phiếu phạt duy nhất và tải lại danh sách phạt.
+- Mỗi bản sao có barcode và trạng thái `AVAILABLE`, `BORROWED`, `RESERVED`, `DAMAGED` hoặc `LOST`.
+- Khi hết sách, độc giả có thể đặt trước; khi có bản trả, bản sao được chuyển `RESERVED` cho người đầu hàng đợi trong số ngày cấu hình.
+- Trả sách cho phép chọn tình trạng `GOOD`, `DAMAGED` hoặc `LOST`; hư/mất tạo phạt theo giá sách nếu có, nếu chưa có giá thì dùng mức phạt cấu hình.
+- Mỗi lần gia hạn được lưu tại bảng `loan_renewals`; gia hạn bị từ chối nếu sách đã có người đặt trước hoặc độc giả đang nợ phạt.
+
+API nghiệp vụ mở rộng:
+
+```text
+POST /borrows/reservations
+PUT  /borrows/{id}/return-details?userId={userId}
+     Body: {"condition":"GOOD|DAMAGED|LOST","note":"..."}
+PUT  /borrows/return-by-barcode
+     Body: {"barcode":"BOOK-1-1","condition":"GOOD|DAMAGED|LOST","note":"..."}
+```
 
 Các API chính:
 

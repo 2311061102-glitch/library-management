@@ -80,6 +80,49 @@ public class BorrowController {
         }
     }
 
+    @PutMapping("/{id}/return-details")
+    public ResponseEntity<?> returnBookWithCondition(@PathVariable Long id,
+                                                      @RequestParam Long userId,
+                                                      @RequestBody ReturnRequest request) {
+        try {
+            return ResponseEntity.ok(borrowService.returnBook(id, userId, request.getCondition(), request.getNote()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reservations")
+    public ResponseEntity<?> reserveBook(@RequestBody BorrowRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(borrowService.reserveBook(request.getUserId(), request.getBookId()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/return-by-barcode")
+    public ResponseEntity<?> returnByBarcode(@RequestBody BarcodeReturnRequest request) {
+        try {
+            return ResponseEntity.ok(borrowService.returnByBarcode(
+                    request.getBarcode(), request.getCondition(), request.getNote()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     // ===== Xem lịch sử mượn của 1 người dùng =====
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<BorrowRecord>> getBorrowsByUser(@PathVariable Long userId) {
@@ -111,5 +154,26 @@ public class BorrowController {
         public void setUserId(Long userId) { this.userId = userId; }
         public Long getBookId() { return bookId; }
         public void setBookId(Long bookId) { this.bookId = bookId; }
+    }
+
+    public static class ReturnRequest {
+        private String condition;
+        private String note;
+        public String getCondition() { return condition; }
+        public void setCondition(String condition) { this.condition = condition; }
+        public String getNote() { return note; }
+        public void setNote(String note) { this.note = note; }
+    }
+
+    public static class BarcodeReturnRequest {
+        private String barcode;
+        private String condition;
+        private String note;
+        public String getBarcode() { return barcode; }
+        public void setBarcode(String barcode) { this.barcode = barcode; }
+        public String getCondition() { return condition; }
+        public void setCondition(String condition) { this.condition = condition; }
+        public String getNote() { return note; }
+        public void setNote(String note) { this.note = note; }
     }
 }

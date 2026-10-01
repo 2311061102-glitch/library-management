@@ -1,6 +1,7 @@
 package vn.edu.crs.librarymanagement.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -25,6 +26,15 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false, length = 20)
+    private String accountStatus = "ACTIVE";
+
+    @Column(name = "card_expires_at")
+    private LocalDate cardExpiresAt;
+
+    @Column(name = "blocked_until")
+    private LocalDate blockedUntil;
+
     public enum Role {
         ADMIN, CUSTOMER
     }
@@ -41,4 +51,10 @@ public class User {
     public void setStudentCode(String studentCode) { this.studentCode = studentCode; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+    public String getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(String accountStatus) { this.accountStatus = accountStatus; }
+    public LocalDate getCardExpiresAt() { return cardExpiresAt; }
+    public void setCardExpiresAt(LocalDate cardExpiresAt) { this.cardExpiresAt = cardExpiresAt; }
+    public LocalDate getBlockedUntil() { return blockedUntil; }
+    public void setBlockedUntil(LocalDate blockedUntil) { this.blockedUntil = blockedUntil; }
 }

@@ -19,6 +19,10 @@ public class BorrowRecord {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
+    @ManyToOne
+    @JoinColumn(name = "book_copy_id")
+    private BookCopy bookCopy;
+
     @Column(name = "borrow_date", nullable = false)
     private LocalDateTime borrowDate;
 
@@ -40,6 +44,8 @@ public class BorrowRecord {
     public void setUser(User user) { this.user = user; }
     public Book getBook() { return book; }
     public void setBook(Book book) { this.book = book; }
+    public BookCopy getBookCopy() { return bookCopy; }
+    public void setBookCopy(BookCopy bookCopy) { this.bookCopy = bookCopy; }
     public LocalDateTime getBorrowDate() { return borrowDate; }
     public void setBorrowDate(LocalDateTime borrowDate) { this.borrowDate = borrowDate; }
     public LocalDateTime getDueDate() { return dueDate; }
