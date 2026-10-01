@@ -66,10 +66,13 @@ public class BorrowController {
 
     // ===== Trả sách =====
     @PutMapping("/{id}/return")
-    public ResponseEntity<?> returnBook(@PathVariable Long id) {
+    public ResponseEntity<?> returnBook(@PathVariable Long id,
+                                        @RequestParam(required = false) Long userId) {
         try {
-            BorrowRecord record = borrowService.returnBook(id);
+            BorrowRecord record = borrowService.returnBook(id, userId);
             return ResponseEntity.ok(record);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalStateException e) {

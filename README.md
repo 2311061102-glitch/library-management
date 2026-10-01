@@ -34,7 +34,8 @@ $env:DB_PASSWORD = "mật_khẩu_MySQL_của_bạn"
 - Người dùng còn phiếu phạt `UNPAID` phải thanh toán trước khi mượn sách mới.
 - Khi mượn, hệ thống trừ `available_copies` và tạo phiếu với hạn trả tự động.
 - Chỉ phiếu đang mượn và chưa quá hạn mới được gia hạn; số lần và số ngày gia hạn lấy từ cấu hình.
-- Khi trả sách, hệ thống hoàn lại tồn kho. Nếu trả quá hạn, hệ thống tự tạo một phiếu phạt duy nhất.
+- Người dùng có thể trả sách trực tiếp trong trang `Sach toi da muon`; hệ thống kiểm tra đúng chủ phiếu trước khi xử lý.
+- Khi trả sách, hệ thống hoàn lại tồn kho. Nếu trả quá hạn, hệ thống tự tạo một phiếu phạt duy nhất và tải lại danh sách phạt.
 
 Các API chính:
 

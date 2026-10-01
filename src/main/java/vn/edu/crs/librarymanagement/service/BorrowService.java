@@ -190,9 +190,15 @@ public class BorrowService {
     // ===== Trả sách =====
     @Transactional
     public BorrowRecord returnBook(Long borrowId) {
+        return returnBook(borrowId, null);
+    }
+
+    @Transactional
+    public BorrowRecord returnBook(Long borrowId, Long userId) {
         BorrowRecord record = borrowRecordRepository.findById(borrowId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay phieu muon"));
 
+        checkOwner(record, userId);
         if (RETURNED.equals(record.getStatus())) {
             throw new IllegalStateException("Phieu muon nay da duoc tra truoc do");
         }

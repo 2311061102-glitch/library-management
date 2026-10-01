@@ -43,10 +43,38 @@ function renderBorrows(records) {
       <td>${r.renewCount}</td>
       <td>
         <button class="btn btn-warning btn-sm" onclick="renewBorrow(${r.id})">Gia han</button>
+        <button class="btn btn-success btn-sm" onclick="returnBorrow(${r.id}, '${escapeHtml(r.book.title)}', ${isOverdue})">Tra sach</button>
       </td>
     `;
         borrowingList.appendChild(row);
     });
+}
+
+async function returnBorrow(id, bookTitle, isOverdue) {
+    const warning = isOverdue
+        ? "\nSach da qua han, he thong se tao phieu phat theo so ngay tre."
+        : "";
+    if (!confirm(`Xac nhan tra sach "${bookTitle}"?${warning}`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/borrows/${id}/return?userId=${currentUser.id}`, {
+            method: "PUT",
+            headers: { "X-API-KEY": "SECRET_KEY_123" }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(isOverdue
+                ? "Tra sach thanh cong. Vui long kiem tra phieu phat trong tai khoan."
+                : "Tra sach thanh cong!");
+            await loadMyBorrows();
+            await loadMyFines();
+        } else {
+            alert("Khong the tra sach: " + (typeof data === "string" ? data : JSON.stringify(data)));
+        }
+    } catch (err) {
+        console.error("Loi tra sach:", err);
+        alert("Khong the ket noi server");
+    }
 }
 
 function renderFullHistory(records) {
@@ -123,6 +151,12 @@ function renderFines(fines) {
     if (fines.length === 0) {
         fineList.innerHTML = `<tr><td colspan="3" class="text-center">Khong co phieu phat nao</td></tr>`;
         return;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+        }[char]));
     }
     fines.forEach(f => {
         const row = document.createElement("tr");
