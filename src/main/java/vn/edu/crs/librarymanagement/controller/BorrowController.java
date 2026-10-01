@@ -20,10 +20,18 @@ public class BorrowController {
     }
 
     @GetMapping("/eligibility")
-    public ResponseEntity<?> checkEligibility(@RequestParam("userId") Long userId,
-                                              @RequestParam("bookId") Long bookId) {
+    public ResponseEntity<?> checkEligibility(
+            @RequestParam(value = "userId", required = false) String rawUserId,
+            @RequestParam(value = "bookId", required = false) String rawBookId) {
         try {
+            if (rawUserId == null || rawUserId.isBlank() || rawBookId == null || rawBookId.isBlank()) {
+                return ResponseEntity.badRequest().body("userId va bookId la bat buoc");
+            }
+            Long userId = Long.valueOf(rawUserId);
+            Long bookId = Long.valueOf(rawBookId);
             return ResponseEntity.ok(borrowService.checkBorrowEligibility(userId, bookId));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("userId va bookId phai la so nguyen");
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalArgumentException e) {
