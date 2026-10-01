@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>Thư viện Mộc — Quản lý mượn trả sách</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#catalog" aria-label="Thư viện Mộc - trang chủ">
+        <span class="brand-mark">M</span><span><strong>mộc.</strong><small>THƯ VIỆN SỐ</small></span>
+      </a>
+      <div class="side-caption">KHÔNG GIAN CỦA BẠN</div>
+      <nav class="navigation" id="navigation"></nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><span class="help-icon">✳</span><strong>Cần tìm một cuốn sách?</strong><p>Khám phá bộ sưu tập và tìm điều bạn muốn đọc.</p><button class="text-button" data-view="catalog">Khám phá sách <span>↗</span></button></div>
+        <div class="user-mini" id="user-mini"></div>
+      </div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menu-toggle" aria-label="Mở menu">☰</button>
+        <div class="breadcrumb"><span>Thư viện</span><span class="crumb-slash">/</span><strong id="page-label">Khám phá</strong></div>
+        <div class="top-actions"><span class="today" id="today-label"></span><button class="avatar" id="top-avatar" aria-label="Tài khoản">?</button></div>
+      </header>
+      <div id="toast-region" class="toast-region" aria-live="polite"></div>
+      <section class="page-content" id="page-content"></section>
+      <footer class="footer">© 2026 Thư viện Mộc <span>Đọc để lớn lên mỗi ngày.</span></footer>
+    </main>
+  </div>
+  <div class="modal-backdrop" id="modal-backdrop" hidden><section class="modal-card" id="modal-card" role="dialog" aria-modal="true"></section></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

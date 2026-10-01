@@ -1,0 +1,95 @@
+package vn.edu.crs.librarymanagement.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import vn.edu.crs.librarymanagement.entity.BorrowRecord;
+import vn.edu.crs.librarymanagement.service.BorrowService;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/borrows")
+public class BorrowController {
+
+    private final BorrowService borrowService;
+
+    public BorrowController(BorrowService borrowService) {
+        this.borrowService = borrowService;
+    }
+
+    // ===== Tạo phiếu mượn mới =====
+    // Body: {"userId": 2, "bookId": 1}
+    @PostMapping
+    public ResponseEntity<?> borrowBook(@RequestBody BorrowRequest request) {
+        try {
+            BorrowRecord record = borrowService.borrowBook(request.getUserId(), request.getBookId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(record);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    // ===== Gia hạn phiếu mượn =====
+    @PutMapping("/{id}/renew")
+    public ResponseEntity<?> renewBorrow(@PathVariable Long id) {
+        try {
+            BorrowRecord record = borrowService.renewBorrow(id);
+            return ResponseEntity.ok(record);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    // ===== Trả sách =====
+    @PutMapping("/{id}/return")
+    public ResponseEntity<?> returnBook(@PathVariable Long id) {
+        try {
+            BorrowRecord record = borrowService.returnBook(id);
+            return ResponseEntity.ok(record);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    // ===== Xem lịch sử mượn của 1 người dùng =====
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<BorrowRecord>> getBorrowsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(borrowService.getBorrowsByUser(userId));
+    }
+
+    // ===== Xem tất cả phiếu mượn (dành cho ADMIN) =====
+    @GetMapping
+    public ResponseEntity<?> getAllBorrows(@RequestParam String role) {
+        if (!"ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Ban khong co quyen xem toan bo phieu muon");
+        }
+        return ResponseEntity.ok(borrowService.getAllBorrows());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BorrowRecord> getBorrowById(@PathVariable Long id) {
+        return borrowService.getBorrowById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    // ===== DTO nội bộ cho request tạo phiếu mượn =====
+    public static class BorrowRequest {
+        private Long userId;
+        private Long bookId;
+
+        public Long getUserId() { return userId; }
+        public void setUserId(Long userId) { this.userId = userId; }
+        public Long getBookId() { return bookId; }
+        public void setBookId(Long bookId) { this.bookId = bookId; }
+    }
+}
