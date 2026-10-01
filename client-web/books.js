@@ -6,6 +6,12 @@ const sortSelect = document.getElementById("sortSelect");
 const welcomeText = document.getElementById("welcomeText");
 const logoutBtn = document.getElementById("logoutBtn");
 const categoryFilter = document.getElementById("categoryFilter");
+const borrowModal = document.getElementById("borrowModal");
+const borrowModalBody = document.getElementById("borrowModalBody");
+const confirmBorrowBtn = document.getElementById("confirmBorrowBtn");
+const borrowModalInstance = borrowModal ? new bootstrap.Modal(borrowModal) : null;
+let selectedBookId = null;
+let borrowEligibility = null;
 
 // Kiểm tra đăng nhập
 const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -100,7 +106,7 @@ function renderBooks(books) {
             ${b.availableCopies === 0 ? 'Het sach' : `Con lai: ${b.availableCopies}/${b.totalCopies}`}
           </p>
           ${currentUser && currentUser.role === "CUSTOMER"
-            ? `<button class="btn btn-primary btn-sm" ${disabled} onclick="borrowBook(${b.id})">Muon sach</button>`
+            ? `<button class="btn btn-primary btn-sm" ${disabled} onclick="openBorrowConfirmation(${b.id})">Muon sach</button>`
             : ''}
         </div>
       </div>
@@ -108,13 +114,60 @@ function renderBooks(books) {
         bookList.appendChild(col);
     });
 }
-// Mượn sách
-async function borrowBook(bookId) {
+async function openBorrowConfirmation(bookId) {
     if (!currentUser) {
         alert("Vui long dang nhap de muon sach!");
         window.location.href = "login.html";
         return;
     }
+
+    selectedBookId = bookId;
+    borrowEligibility = null;
+    confirmBorrowBtn.disabled = true;
+    borrowModalBody.innerHTML = `
+        <div class="text-center py-3">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            Dang kiem tra dieu kien muon...
+        </div>`;
+    borrowModalInstance.show();
+
+    try {
+        const res = await fetch(`${API_BASE}/borrows/eligibility?userId=${currentUser.id}&bookId=${bookId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(typeof data === "string" ? data : "Khong kiem tra duoc dieu kien muon");
+
+        borrowEligibility = data;
+        const statusClass = data.eligible ? "text-success" : "text-danger";
+        borrowModalBody.innerHTML = `
+            <h5>${escapeHtml(data.bookTitle)}</h5>
+            <dl class="row mb-3">
+                <dt class="col-7">So ban con lai</dt><dd class="col-5">${data.availableCopies}/${data.totalCopies}</dd>
+                <dt class="col-7">Dang muon</dt><dd class="col-5">${data.currentBorrowing}/${data.maxBooksPerUser}</dd>
+                <dt class="col-7">Thoi han</dt><dd class="col-5">${data.borrowDurationDays} ngay</dd>
+                <dt class="col-7">Han tra du kien</dt><dd class="col-5">${formatDate(data.dueDate)}</dd>
+            </dl>
+            <div class="${statusClass} fw-bold mb-3">${escapeHtml(data.reason)}</div>
+            ${data.eligible ? `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="borrowPolicyCheck">
+                    <label class="form-check-label" for="borrowPolicyCheck">
+                        Toi dong y tra sach dung han va chiu phi neu tra qua han.
+                    </label>
+                </div>` : `
+                <div class="alert alert-warning mb-0">Khong the tao phieu muon luc nay.</div>`}`;
+        const policyCheck = document.getElementById("borrowPolicyCheck");
+        if (policyCheck) {
+            policyCheck.addEventListener("change", () => {
+                confirmBorrowBtn.disabled = !policyCheck.checked;
+            });
+        }
+    } catch (err) {
+        borrowModalBody.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function borrowBook(bookId) {
+    if (!currentUser) return;
     try {
         const res = await fetch(`${API_BASE}/borrows`, {
             method: "POST",
@@ -126,7 +179,8 @@ async function borrowBook(bookId) {
         });
         const data = await res.json();
         if (res.ok) {
-            alert("Muon sach thanh cong!");
+            borrowModalInstance.hide();
+            alert(`Muon sach thanh cong! Han tra: ${formatDate(data.dueDate)}`);
             loadBooks();
         } else {
             alert("Loi: " + (typeof data === "string" ? data : JSON.stringify(data)));
@@ -135,6 +189,22 @@ async function borrowBook(bookId) {
         console.error("Loi muon sach:", err);
         alert("Khong the ket noi server");
     }
+}
+
+confirmBorrowBtn.addEventListener("click", () => {
+    if (!borrowEligibility || !borrowEligibility.eligible || selectedBookId === null) return;
+    confirmBorrowBtn.disabled = true;
+    borrowBook(selectedBookId);
+});
+
+function formatDate(value) {
+    return new Date(value).toLocaleDateString("vi-VN");
+}
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    }[char]));
 }
 // Render phân trang
 function renderPagination(totalPages) {

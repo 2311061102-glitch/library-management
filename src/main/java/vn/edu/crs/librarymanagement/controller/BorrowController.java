@@ -19,6 +19,17 @@ public class BorrowController {
         this.borrowService = borrowService;
     }
 
+    @GetMapping("/eligibility")
+    public ResponseEntity<?> checkEligibility(@RequestParam Long userId, @RequestParam Long bookId) {
+        try {
+            return ResponseEntity.ok(borrowService.checkBorrowEligibility(userId, bookId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // ===== Tạo phiếu mượn mới =====
     // Body: {"userId": 2, "bookId": 1}
     @PostMapping

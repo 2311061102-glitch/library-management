@@ -18,6 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public class BorrowService {
@@ -103,6 +105,59 @@ public class BorrowService {
         record.setStatus(BORROWING);
 
         return borrowRecordRepository.save(record);
+    }
+
+    public Map<String, Object> checkBorrowEligibility(Long userId, Long bookId) {
+        if (userId == null || bookId == null) {
+            throw new IllegalArgumentException("userId va bookId khong duoc de trong");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("Khong tim thay nguoi dung"));
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new NoSuchElementException("Khong tim thay sach"));
+
+        long currentBorrowing = borrowRecordRepository.countByUserIdAndStatus(userId, BORROWING);
+        boolean hasUnpaidFine = fineRepository.existsByBorrowRecord_User_IdAndStatus(userId, "UNPAID");
+        boolean alreadyBorrowing = borrowRecordRepository.existsByUserIdAndBookIdAndStatus(userId, bookId, BORROWING);
+        boolean available = book.getAvailableCopies() != null && book.getAvailableCopies() > 0;
+        boolean eligible = currentBorrowing < maxBooksPerUser
+                && !hasUnpaidFine
+                && !alreadyBorrowing
+                && available;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("eligible", eligible);
+        result.put("userId", user.getId());
+        result.put("bookId", book.getId());
+        result.put("bookTitle", book.getTitle());
+        result.put("availableCopies", book.getAvailableCopies());
+        result.put("totalCopies", book.getTotalCopies());
+        result.put("currentBorrowing", currentBorrowing);
+        result.put("maxBooksPerUser", maxBooksPerUser);
+        result.put("borrowDurationDays", borrowDurationDays);
+        result.put("dueDate", LocalDateTime.now().plusDays(borrowDurationDays));
+        result.put("hasUnpaidFine", hasUnpaidFine);
+        result.put("alreadyBorrowing", alreadyBorrowing);
+        result.put("reason", eligibilityReason(currentBorrowing, hasUnpaidFine, alreadyBorrowing, available));
+        return result;
+    }
+
+    private String eligibilityReason(long currentBorrowing, boolean hasUnpaidFine,
+                                    boolean alreadyBorrowing, boolean available) {
+        if (currentBorrowing >= maxBooksPerUser) {
+            return "Ban da dat gioi han " + maxBooksPerUser + " cuon sach dang muon";
+        }
+        if (hasUnpaidFine) {
+            return "Ban con phieu phat chua thanh toan";
+        }
+        if (alreadyBorrowing) {
+            return "Ban dang muon sach nay";
+        }
+        if (!available) {
+            return "Sach da het ban";
+        }
+        return "Du dieu kien muon sach";
     }
 
     // ===== Gia hạn phiếu mượn =====

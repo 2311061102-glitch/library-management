@@ -37,6 +37,28 @@
     </nav>
 </div>
 
+<div class="modal fade" id="borrowModal" tabindex="-1" aria-labelledby="borrowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowModalLabel">Xac nhan muon sach</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Dong"></button>
+            </div>
+            <div class="modal-body" id="borrowModalBody">
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    Dang kiem tra dieu kien muon...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huy</button>
+                <button type="button" class="btn btn-primary" id="confirmBorrowBtn" disabled>Xac nhan muon</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="books.js"></script>
 </body>
 </html>

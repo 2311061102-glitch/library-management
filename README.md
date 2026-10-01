@@ -44,7 +44,15 @@ PUT  /borrows/{id}/renew?userId={userId}
 PUT  /borrows/{id}/return
 GET  /borrows/user/{userId}
 GET  /borrows?role=ADMIN
+GET  /borrows/eligibility?userId={userId}&bookId={bookId}
 ```
+
+Trên giao diện, nút **Mượn sách** không tạo phiếu ngay. Hệ thống trước tiên gọi
+`GET /borrows/eligibility` để hiển thị sách, số bản còn lại, số sách người dùng
+đang giữ, hạn trả dự kiến và các điều kiện bị từ chối. Người dùng phải tích
+đồng ý chính sách rồi mới xác nhận. Request tạo phiếu vẫn kiểm tra lại toàn bộ
+điều kiện trong transaction để tránh việc dữ liệu thay đổi giữa lúc xem và lúc
+xác nhận.
 
 ## Bộ câu hỏi bảo vệ và cách trả lời
 
