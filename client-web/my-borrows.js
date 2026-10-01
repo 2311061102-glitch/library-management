@@ -91,7 +91,10 @@ function renderFullHistory(records) {
 // Gia hạn
 async function renewBorrow(id) {
     try {
-        const res = await fetch(`${API_BASE}/borrows/${id}/renew`, { method: "PUT" });
+        const res = await fetch(`${API_BASE}/borrows/${id}/renew?userId=${currentUser.id}`, {
+            method: "PUT",
+            headers: { "X-API-KEY": "SECRET_KEY_123" }
+        });
         const data = await res.json();
         if (res.ok) {
             alert("Gia han thanh cong! Han moi: " + new Date(data.dueDate).toLocaleDateString('vi-VN'));

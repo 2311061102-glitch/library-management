@@ -118,7 +118,10 @@ async function borrowBook(bookId) {
     try {
         const res = await fetch(`${API_BASE}/borrows`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-KEY": "SECRET_KEY_123"
+            },
             body: JSON.stringify({ userId: currentUser.id, bookId: bookId })
         });
         const data = await res.json();

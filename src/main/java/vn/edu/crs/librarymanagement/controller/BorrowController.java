@@ -8,7 +8,6 @@ import vn.edu.crs.librarymanagement.service.BorrowService;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/borrows")
@@ -31,19 +30,26 @@ public class BorrowController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     // ===== Gia hạn phiếu mượn =====
     @PutMapping("/{id}/renew")
-    public ResponseEntity<?> renewBorrow(@PathVariable Long id) {
+    public ResponseEntity<?> renewBorrow(@PathVariable Long id,
+                                         @RequestParam(required = false) Long userId) {
         try {
-            BorrowRecord record = borrowService.renewBorrow(id);
+            BorrowRecord record = borrowService.renewBorrow(id, userId);
             return ResponseEntity.ok(record);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

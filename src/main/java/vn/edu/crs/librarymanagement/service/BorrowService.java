@@ -1,6 +1,7 @@
 package vn.edu.crs.librarymanagement.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import vn.edu.crs.librarymanagement.entity.Book;
 import vn.edu.crs.librarymanagement.entity.BorrowRecord;
@@ -53,14 +54,19 @@ public class BorrowService {
     }
 
     // ===== Tạo phiếu mượn mới =====
+    @Transactional
     public BorrowRecord borrowBook(Long userId, Long bookId) {
+        if (userId == null || bookId == null) {
+            throw new IllegalArgumentException("userId va bookId khong duoc de trong");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay nguoi dung"));
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay sach"));
 
         // Ràng buộc 1: số sách đang mượn không vượt giới hạn
-        long currentBorrowing = borrowRecordRepository.findByUserIdAndStatus(userId, BORROWING).size();
+        long currentBorrowing = borrowRecordRepository.countByUserIdAndStatus(userId, BORROWING);
         if (currentBorrowing >= maxBooksPerUser) {
             throw new IllegalStateException("Ban da muon toi da " + maxBooksPerUser + " cuon sach");
         }
@@ -71,8 +77,13 @@ public class BorrowService {
             throw new IllegalStateException("Vui long thanh toan het phi phat truoc khi muon sach moi");
         }
 
+        // Không cho phép một người giữ hai phiếu mượn đang hoạt động cho cùng một sách.
+        if (borrowRecordRepository.existsByUserIdAndBookIdAndStatus(userId, bookId, BORROWING)) {
+            throw new IllegalStateException("Ban dang muon sach nay");
+        }
+
         // Ràng buộc 3: sách phải còn tồn kho
-        if (book.getAvailableCopies() <= 0) {
+        if (book.getAvailableCopies() == null || book.getAvailableCopies() <= 0) {
             throw new IllegalStateException("Sach da het, khong the muon");
         }
 
@@ -94,16 +105,22 @@ public class BorrowService {
 
     // ===== Gia hạn phiếu mượn =====
     public BorrowRecord renewBorrow(Long borrowId) {
+        return renewBorrow(borrowId, null);
+    }
+
+    @Transactional
+    public BorrowRecord renewBorrow(Long borrowId, Long userId) {
         BorrowRecord record = borrowRecordRepository.findById(borrowId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay phieu muon"));
 
+        checkOwner(record, userId);
         if (!BORROWING.equals(record.getStatus())) {
             throw new IllegalStateException("Phieu muon nay da tra, khong the gia han");
         }
         if (LocalDateTime.now().isAfter(record.getDueDate())) {
             throw new IllegalStateException("Phieu muon da qua han, khong the gia han");
         }
-        if (record.getRenewCount() >= maxRenewCount) {
+        if (record.getRenewCount() == null || record.getRenewCount() >= maxRenewCount) {
             throw new IllegalStateException("Da het luot gia han cho phieu muon nay");
         }
 
@@ -114,6 +131,7 @@ public class BorrowService {
     }
 
     // ===== Trả sách =====
+    @Transactional
     public BorrowRecord returnBook(Long borrowId) {
         BorrowRecord record = borrowRecordRepository.findById(borrowId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay phieu muon"));
@@ -133,8 +151,8 @@ public class BorrowService {
 
         BorrowRecord saved = borrowRecordRepository.save(record);
 
-        // Nếu trả trễ hạn, tự động tạo phiếu phạt
-        if (now.isAfter(record.getDueDate())) {
+        // Nếu trả trễ hạn, tự động tạo duy nhất một phiếu phạt cho lần mượn này.
+        if (now.isAfter(record.getDueDate()) && fineRepository.findByBorrowRecord_Id(record.getId()).isEmpty()) {
             long lateDays = ChronoUnit.DAYS.between(record.getDueDate(), now);
             if (lateDays < 1) lateDays = 1; // trễ dù chỉ vài giờ vẫn tính tối thiểu 1 ngày
 
@@ -148,6 +166,12 @@ public class BorrowService {
         }
 
         return saved;
+    }
+
+    private void checkOwner(BorrowRecord record, Long userId) {
+        if (userId != null && (record.getUser() == null || !userId.equals(record.getUser().getId()))) {
+            throw new SecurityException("Ban khong co quyen thao tac phieu muon nay");
+        }
     }
 
     // ===== Xem phiếu mượn của 1 người dùng =====
