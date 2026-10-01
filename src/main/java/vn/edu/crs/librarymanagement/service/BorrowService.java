@@ -60,9 +60,11 @@ public class BorrowService {
             throw new IllegalArgumentException("userId va bookId khong duoc de trong");
         }
 
-        User user = userRepository.findById(userId)
+        // Khóa user và book trong cùng transaction để hai request đồng thời
+        // không cùng vượt qua các giới hạn nghiệp vụ.
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay nguoi dung"));
-        Book book = bookRepository.findById(bookId)
+        Book book = bookRepository.findByIdForUpdate(bookId)
                 .orElseThrow(() -> new NoSuchElementException("Khong tim thay sach"));
 
         // Ràng buộc 1: số sách đang mượn không vượt giới hạn
