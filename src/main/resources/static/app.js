@@ -17,7 +17,11 @@ async function api(path, options={}){
   if(options.method&&options.method!=='GET'&&(/^\/(books|categories)/.test(path)))headers.set('X-API-KEY',API_KEY);
   const res=await fetch(API+path,{...options,headers}); const type=res.headers.get('content-type')||''; let data;
   if(res.status===204)data=null; else if(type.includes('json'))data=await res.json();else data=await res.text();
-  if(!res.ok)throw new Error(typeof data==='string'?data:(data?.message||data?.error||`Yêu cầu thất bại (${res.status})`)); return data;
+  if(!res.ok){
+    const detail=typeof data==='string'?data:(data?.message||data?.error||data?.detail||JSON.stringify(data));
+    throw new Error(`${res.status}: ${detail||'Yêu cầu thất bại'}`);
+  }
+  return data;
 }
 function nav(){
   const base=[['catalog','⌕','Khám phá sách']];
@@ -89,7 +93,7 @@ document.addEventListener('click',async e=>{
  const el=e.target.closest('[data-action]');if(!el)return;const id=el.dataset.id;try{switch(el.dataset.action){
  case'auth':state.view='auth';state.authMode='login';render();break;case'logout':localStorage.removeItem('currentUser');state.user=null;state.view='catalog';toast('Bạn đã đăng xuất.');render();break;case'close-modal':closeModal();break;case'retry':render();break;
  case'page':state.page=Number(el.dataset.page);await refresh();break;case'admin-page':state.page=Number(el.dataset.page);await render();break;
- case'borrow':{const check=await api(`/borrows/eligibility?userId=${state.user.id}&bookId=${id}`);const detail=`${check.bookTitle}\nCòn: ${check.availableCopies}/${check.totalCopies}\nĐang mượn: ${check.currentBorrowing}/${check.maxBooksPerUser}\nHạn trả dự kiến: ${date(check.dueDate)}\n\n${check.reason}`;if(!check.eligible||!confirm(`${detail}\n\nXác nhận mượn và cam kết trả đúng hạn?`)){break}await api('/borrows',{method:'POST',body:JSON.stringify({userId:state.user.id,bookId:Number(id)})});toast(`Mượn sách thành công! Hạn trả: ${date(check.dueDate)}.`);await refresh();break}
+ case'borrow':{const userId=Number(state.user?.id),bookId=Number(id);if(!Number.isInteger(userId)||userId<1||!Number.isInteger(bookId)||bookId<1)throw Error('Phiên đăng nhập không hợp lệ. Hãy đăng xuất và đăng nhập lại.');const check=await api(`/borrows/eligibility?userId=${userId}&bookId=${bookId}`);const detail=`${check.bookTitle}\nCòn: ${check.availableCopies}/${check.totalCopies}\nĐang mượn: ${check.currentBorrowing}/${check.maxBooksPerUser}\nHạn trả dự kiến: ${date(check.dueDate)}\n\n${check.reason}`;if(!check.eligible||!confirm(`${detail}\n\nXác nhận mượn và cam kết trả đúng hạn?`)){break}await api('/borrows',{method:'POST',body:JSON.stringify({userId,bookId})});toast(`Mượn sách thành công! Hạn trả: ${date(check.dueDate)}.`);await refresh();break}
  case'reserve':if(confirm('Sách đã hết. Đặt trước để được ưu tiên khi có bản trả?')){await api('/borrows/reservations',{method:'POST',body:JSON.stringify({userId:state.user.id,bookId:Number(id)})});toast('Đã đặt trước sách.');await refresh()}break;
  case'renew':if(confirm('Gia hạn phiếu mượn này?')){await api(`/borrows/${id}/renew?userId=${state.user.id}`,{method:'PUT'});toast('Gia hạn sách thành công.');await render()}break;
  case'return-member':{const title=el.dataset.title||'sách này';const overdue=el.dataset.overdue==='true';const condition=(prompt(`Tình trạng "${title}"? Nhập GOOD, DAMAGED hoặc LOST.`,`GOOD`)||'').toUpperCase();if(!['GOOD','DAMAGED','LOST'].includes(condition))throw Error('Tình trạng sách không hợp lệ.');const note=condition==='GOOD'?'':(prompt('Mô tả hư hỏng/mất sách:','')||'');const warning=overdue?' Sách đã quá hạn và hệ thống sẽ tạo phiếu phạt theo số ngày trễ.':'';if(confirm(`Xác nhận trả "${title}"?${warning}`)){await api(`/borrows/${id}/return-details?userId=${state.user.id}`,{method:'PUT',body:JSON.stringify({condition,note})});toast(overdue||condition!=='GOOD'?'Đã trả sách và cập nhật khoản phạt.':'Đã trả sách thành công.');await render()}}break;

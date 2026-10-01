@@ -20,13 +20,16 @@ public class BorrowController {
     }
 
     @GetMapping("/eligibility")
-    public ResponseEntity<?> checkEligibility(@RequestParam Long userId, @RequestParam Long bookId) {
+    public ResponseEntity<?> checkEligibility(@RequestParam("userId") Long userId,
+                                              @RequestParam("bookId") Long bookId) {
         try {
             return ResponseEntity.ok(borrowService.checkBorrowEligibility(userId, bookId));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
@@ -35,6 +38,9 @@ public class BorrowController {
     @PostMapping
     public ResponseEntity<?> borrowBook(@RequestBody BorrowRequest request) {
         try {
+            if (request == null) {
+                return ResponseEntity.badRequest().body("Body request khong duoc de trong");
+            }
             BorrowRecord record = borrowService.borrowBook(request.getUserId(), request.getBookId());
             return ResponseEntity.status(HttpStatus.CREATED).body(record);
         } catch (NoSuchElementException e) {
@@ -49,7 +55,7 @@ public class BorrowController {
     // ===== Gia hạn phiếu mượn =====
     @PutMapping("/{id}/renew")
     public ResponseEntity<?> renewBorrow(@PathVariable Long id,
-                                         @RequestParam(required = false) Long userId) {
+                                         @RequestParam(value = "userId", required = false) Long userId) {
         try {
             BorrowRecord record = borrowService.renewBorrow(id, userId);
             return ResponseEntity.ok(record);
@@ -82,7 +88,7 @@ public class BorrowController {
 
     @PutMapping("/{id}/return-details")
     public ResponseEntity<?> returnBookWithCondition(@PathVariable Long id,
-                                                      @RequestParam Long userId,
+                                                      @RequestParam("userId") Long userId,
                                                       @RequestBody ReturnRequest request) {
         try {
             return ResponseEntity.ok(borrowService.returnBook(id, userId, request.getCondition(), request.getNote()));
