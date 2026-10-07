@@ -13,7 +13,13 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     Page<BorrowRecord> findByStatus(String status, Pageable pageable);
 
+    Page<BorrowRecord> findByReaderId(Long readerId, Pageable pageable);
+
     long countByReaderIdAndStatus(Long readerId, String status);
 
     boolean existsByReaderIdAndBookIdAndStatus(Long readerId, Long bookId, String status);
+
+    long countByReaderId(Long readerId);
+
+    Page<BorrowRecord> findByReaderIdAndStatus(Long readerId, String status, Pageable pageable);
 }

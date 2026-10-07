@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.library.borrowservice.client.BookClient;
 import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
+import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
 import vn.edu.library.borrowservice.entity.BorrowRecord;
 import vn.edu.library.borrowservice.entity.Fine;
 import vn.edu.library.borrowservice.repository.BorrowRecordRepository;
@@ -36,6 +37,9 @@ public class BorrowService {
 
     @Value("${borrow.fine-per-day:5000}")
     private long finePerDay;
+
+    @Value("${borrow.max-renewals:1}")
+    private int maxRenewals;
 
     /**
      * Mượn sách.
@@ -75,6 +79,7 @@ public class BorrowService {
             record.setBorrowDate(LocalDateTime.now());
             record.setDueDate(LocalDate.now().plusDays(loanDays));
             record.setStatus(BorrowRecord.BORROWING);
+            record.setRenewalCount(0);
             return toDTO(borrowRecordRepository.save(record));
         } catch (RuntimeException e) {
             // Bù trừ (compensation): lưu phiếu thất bại thì hoàn trả bản sách đã trừ ở book-service.
@@ -125,17 +130,77 @@ public class BorrowService {
         return toDTO(record);
     }
 
-    public List<BorrowRecordDTO> getMyBorrows(Long readerId) {
+    @Transactional
+    public BorrowRecordDTO renew(Long recordId, Long currentUserId, boolean librarian) {
+        BorrowRecord record = find(recordId);
+        assertOwnerOrLibrarian(record, currentUserId, librarian);
+        if (!BorrowRecord.BORROWING.equals(record.getStatus())) {
+            throw new IllegalStateException("Chỉ có thể gia hạn phiếu đang mượn");
+        }
+        int renewals = record.getRenewalCount() == null ? 0 : record.getRenewalCount();
+        if (renewals >= maxRenewals) {
+            throw new IllegalStateException("Phiếu mượn đã hết số lần gia hạn");
+        }
+        if (FineCalculator.overdueDays(record.getDueDate(), LocalDate.now()) > 0) {
+            throw new IllegalStateException("Không thể gia hạn sách đã quá hạn");
+        }
+        if (fineRepository.existsByReaderIdAndPaidFalse(record.getReaderId())) {
+            throw new IllegalStateException("Độc giả còn khoản phạt chưa thanh toán, không thể gia hạn");
+        }
+        record.setDueDate(record.getDueDate().plusDays(loanDays));
+        record.setRenewalCount(renewals + 1);
+        return toDTO(borrowRecordRepository.save(record));
+    }
+
+    public List<BorrowRecordDTO> getMyBorrows(Long readerId, String status, Boolean overdue) {
         return borrowRecordRepository.findByReaderIdOrderByIdDesc(readerId).stream()
+                .filter(r -> status == null || status.isBlank() || status.equalsIgnoreCase(r.getStatus()))
+                .filter(r -> overdue == null || overdue == isOverdue(r))
                 .map(this::toDTO).toList();
     }
 
+    public BorrowSummaryDTO getMySummary(Long readerId) {
+        long total = borrowRecordRepository.countByReaderId(readerId);
+        long active = borrowRecordRepository.countByReaderIdAndStatus(readerId, BorrowRecord.BORROWING);
+        long returned = borrowRecordRepository.countByReaderIdAndStatus(readerId, BorrowRecord.RETURNED);
+        long overdue = borrowRecordRepository.findByReaderIdOrderByIdDesc(readerId).stream()
+                .filter(this::isOverdue).count();
+        return new BorrowSummaryDTO(total, active, returned, overdue,
+                fineRepository.countByReaderIdAndPaidFalse(readerId),
+                fineRepository.sumAmountByReaderIdAndPaidFalse(readerId));
+    }
+
     /** Dành cho thủ thư: xem toàn bộ phiếu mượn, lọc tùy chọn theo trạng thái. */
-    public Page<BorrowRecordDTO> getAll(String status, Pageable pageable) {
+    public Page<BorrowRecordDTO> getAll(String status, Long readerId, Pageable pageable) {
+        if (status != null && !status.isBlank()
+                && !BorrowRecord.BORROWING.equals(status)
+                && !BorrowRecord.RETURNED.equals(status)) {
+            throw new IllegalArgumentException("status phải là BORROWING hoặc RETURNED");
+        }
         Page<BorrowRecord> page = (status == null || status.isBlank())
-                ? borrowRecordRepository.findAll(pageable)
-                : borrowRecordRepository.findByStatus(status, pageable);
+                ? (readerId == null ? borrowRecordRepository.findAll(pageable)
+                : borrowRecordRepository.findByReaderId(readerId, pageable))
+                : (readerId == null ? borrowRecordRepository.findByStatus(status, pageable)
+                : borrowRecordRepository.findByReaderIdAndStatus(readerId, status, pageable));
         return page.map(this::toDTO);
+    }
+
+    private BorrowRecord find(Long recordId) {
+        return borrowRecordRepository.findById(recordId)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy phiếu mượn id = " + recordId));
+    }
+
+    private void assertOwnerOrLibrarian(BorrowRecord record, Long currentUserId, boolean librarian) {
+        if (!librarian && !record.getReaderId().equals(currentUserId)) {
+            throw new AccessDeniedException("Bạn không có quyền thao tác phiếu mượn của người khác");
+        }
+    }
+
+    private boolean isOverdue(BorrowRecord record) {
+        if (!BorrowRecord.BORROWING.equals(record.getStatus())) {
+            return false;
+        }
+        return FineCalculator.overdueDays(record.getDueDate(), LocalDate.now()) > 0;
     }
 
     private BorrowRecordDTO toDTO(BorrowRecord r) {
@@ -143,12 +208,15 @@ public class BorrowService {
         LocalDate asOf = returned && r.getReturnDate() != null
                 ? r.getReturnDate().toLocalDate() : LocalDate.now();
         int overdueDays = FineCalculator.overdueDays(r.getDueDate(), asOf);
+        int renewalCount = r.getRenewalCount() == null ? 0 : r.getRenewalCount();
         return new BorrowRecordDTO(
                 r.getId(), r.getReaderId(), r.getBookId(), r.getBookTitle(),
                 r.getBorrowDate(), r.getDueDate(), r.getReturnDate(), r.getStatus(),
                 !returned && overdueDays > 0,
                 overdueDays,
-                FineCalculator.fineAmount(overdueDays, finePerDay)
+                FineCalculator.fineAmount(overdueDays, finePerDay),
+                renewalCount,
+                Math.max(0, maxRenewals - renewalCount)
         );
     }
 }

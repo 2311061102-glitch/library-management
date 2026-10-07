@@ -46,4 +46,21 @@ public class BorrowRecord {
 
     @Column(nullable = false, length = 20)
     private String status; // BORROWING / RETURNED
+
+    @Column(name = "renewal_count", nullable = false)
+    private Integer renewalCount = 0;
+
+    public BorrowRecord(Long id, Long readerId, Long bookId, String bookTitle,
+                        LocalDateTime borrowDate, LocalDate dueDate,
+                        LocalDateTime returnDate, String status) {
+        this.id = id;
+        this.readerId = readerId;
+        this.bookId = bookId;
+        this.bookTitle = bookTitle;
+        this.borrowDate = borrowDate;
+        this.dueDate = dueDate;
+        this.returnDate = returnDate;
+        this.status = status;
+        this.renewalCount = 0;
+    }
 }

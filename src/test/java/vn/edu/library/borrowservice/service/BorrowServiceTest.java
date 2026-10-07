@@ -168,4 +168,34 @@ class BorrowServiceTest {
 
         assertThrows(IllegalStateException.class, () -> borrowService.returnBook(5L, 1L, false));
     }
+
+    @Test
+    void renew_conHan_tangHanTraVaSoLanGiaHan() {
+        BorrowRecord record = new BorrowRecord(5L, 1L, 10L, "Clean Code",
+                LocalDateTime.now().minusDays(3), LocalDate.now().plusDays(11), null,
+                BorrowRecord.BORROWING);
+        when(borrowRecordRepository.findById(5L)).thenReturn(Optional.of(record));
+        when(fineRepository.existsByReaderIdAndPaidFalse(1L)).thenReturn(false);
+        when(borrowRecordRepository.save(any(BorrowRecord.class))).thenAnswer(inv -> inv.getArgument(0));
+        ReflectionTestUtils.setField(borrowService, "maxRenewals", 1);
+
+        BorrowRecordDTO result = borrowService.renew(5L, 1L, false);
+
+        assertEquals(LocalDate.now().plusDays(25), result.getDueDate());
+        assertEquals(1, result.getRenewalCount());
+        assertEquals(0, result.getRemainingRenewals());
+    }
+
+    @Test
+    void renew_daHetSoLan_biTuChoi() {
+        BorrowRecord record = new BorrowRecord(5L, 1L, 10L, "Clean Code",
+                LocalDateTime.now(), LocalDate.now().plusDays(10), null,
+                BorrowRecord.BORROWING);
+        record.setRenewalCount(1);
+        when(borrowRecordRepository.findById(5L)).thenReturn(Optional.of(record));
+        ReflectionTestUtils.setField(borrowService, "maxRenewals", 1);
+
+        assertThrows(IllegalStateException.class, () -> borrowService.renew(5L, 1L, false));
+        verify(borrowRecordRepository, never()).save(any());
+    }
 }

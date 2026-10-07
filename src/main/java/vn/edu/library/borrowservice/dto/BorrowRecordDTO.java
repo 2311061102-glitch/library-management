@@ -20,4 +20,6 @@ public class BorrowRecordDTO {
     private boolean overdue;      // đang mượn và đã quá hạn
     private int overdueDays;      // số ngày quá hạn tính đến hiện tại (hoặc đến lúc trả)
     private long estimatedFine;   // tiền phạt dự kiến (VND)
+    private int renewalCount;
+    private int remainingRenewals;
 }

@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
+import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
 import vn.edu.library.borrowservice.service.BorrowService;
 
 import java.util.List;
@@ -29,21 +30,35 @@ public class BorrowController {
     }
 
     @GetMapping("/my")
-    public List<BorrowRecordDTO> getMyBorrows(Authentication authentication) {
-        return borrowService.getMyBorrows(userId(authentication));
+    public List<BorrowRecordDTO> getMyBorrows(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean overdue,
+            Authentication authentication) {
+        return borrowService.getMyBorrows(userId(authentication), status, overdue);
+    }
+
+    @GetMapping("/my/summary")
+    public BorrowSummaryDTO getMySummary(Authentication authentication) {
+        return borrowService.getMySummary(userId(authentication));
     }
 
     // Chỉ thủ thư (đã chặn ở SecurityConfig): GET /borrows?status=BORROWING&page=0&size=10
     @GetMapping
     public Page<BorrowRecordDTO> getAll(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long readerId,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        return borrowService.getAll(status, pageable);
+        return borrowService.getAll(status, readerId, pageable);
     }
 
     @PutMapping("/{id}/return")
     public BorrowRecordDTO returnBook(@PathVariable Long id, Authentication authentication) {
         return borrowService.returnBook(id, userId(authentication), isLibrarian(authentication));
+    }
+
+    @PatchMapping("/{id}/renew")
+    public BorrowRecordDTO renew(@PathVariable Long id, Authentication authentication) {
+        return borrowService.renew(id, userId(authentication), isLibrarian(authentication));
     }
 
     static Long userId(Authentication authentication) {

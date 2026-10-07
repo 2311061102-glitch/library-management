@@ -25,7 +25,8 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         // Quy tắc cụ thể đặt TRƯỚC quy tắc chung (khớp theo thứ tự)
-                        .requestMatchers(HttpMethod.GET, "/borrows/my", "/fines/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/borrows/my", "/borrows/my/summary", "/fines/my").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/borrows/*/renew").authenticated()
                         .requestMatchers(HttpMethod.GET, "/borrows", "/fines").hasRole("LIBRARIAN")
                         .requestMatchers(HttpMethod.PATCH, "/fines/*/pay").hasRole("LIBRARIAN")
                         .requestMatchers("/borrows/**", "/fines/**").authenticated()
