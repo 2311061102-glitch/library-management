@@ -1,0 +1,82 @@
+# path: api-gateway/src/main/resources/application.yml
+# purpose: cấu hình cổng và bảng định tuyến cho api-gateway - điểm vào duy nhất của hệ thống thư viện
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # ---------- auth-service (8081) ----------
+            - id: auth-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+            - id: auth-service-apikeys
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/api-keys,/api/api-keys/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+            # ---------- book-service (8082): sách + thể loại ----------
+            - id: book-service-books
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/books,/api/books/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+            - id: book-service-categories
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/categories,/api/categories/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+            # API dành cho đối tác ngoài (dùng X-API-KEY): /api/public/books -> /books
+            - id: book-service-partner
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/public/books
+              filters:
+                - RewritePath=/api/public/books, /books
+
+            # ---------- borrow-service (8083): mượn trả + phạt ----------
+            - id: borrow-service-borrows
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/borrows,/api/borrows/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+            - id: borrow-service-fines
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/fines,/api/fines/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: "http://localhost:5173"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+
+auth-service:
+  base-url: http://localhost:8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway
