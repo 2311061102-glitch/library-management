@@ -11,6 +11,7 @@ import vn.edu.library.borrowservice.client.BookClient;
 import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
 import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
+import vn.edu.library.borrowservice.dto.BorrowAdminSummaryDTO;
 import vn.edu.library.borrowservice.entity.BorrowRecord;
 import vn.edu.library.borrowservice.entity.Fine;
 import vn.edu.library.borrowservice.repository.BorrowRecordRepository;
@@ -168,6 +169,30 @@ public class BorrowService {
         return new BorrowSummaryDTO(total, active, returned, overdue,
                 fineRepository.countByReaderIdAndPaidFalse(readerId),
                 fineRepository.sumAmountByReaderIdAndPaidFalse(readerId));
+    }
+
+    public BorrowRecordDTO getById(Long recordId, Long currentUserId, boolean librarian) {
+        if (recordId == null || recordId <= 0) {
+            throw new IllegalArgumentException("id phiếu mượn phải là số dương");
+        }
+        BorrowRecord record = find(recordId);
+        assertOwnerOrLibrarian(record, currentUserId, librarian);
+        return toDTO(record);
+    }
+
+    public BorrowAdminSummaryDTO getAdminSummary() {
+        List<BorrowRecord> records = borrowRecordRepository.findAll();
+        long active = records.stream().filter(r -> BorrowRecord.BORROWING.equals(r.getStatus())).count();
+        long returned = records.stream().filter(r -> BorrowRecord.RETURNED.equals(r.getStatus())).count();
+        long overdue = records.stream().filter(this::isOverdue).count();
+        return new BorrowAdminSummaryDTO(
+                records.size(),
+                active,
+                returned,
+                overdue,
+                fineRepository.countByPaidFalse(),
+                fineRepository.sumAmountByPaidFalse()
+        );
     }
 
     /** Dành cho thủ thư: xem toàn bộ phiếu mượn, lọc tùy chọn theo trạng thái. */

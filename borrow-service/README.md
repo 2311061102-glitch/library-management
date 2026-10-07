@@ -13,10 +13,13 @@ tiếp service):
 | POST | `/borrows` | Độc giả/Thủ thư | Mượn sách; thủ thư có thể truyền `readerId` |
 | GET | `/borrows/my` | Đăng nhập | Lịch sử của mình; hỗ trợ `status`, `overdue` |
 | GET | `/borrows/my/summary` | Đăng nhập | Tổng số đang mượn, đã trả, quá hạn và nợ phạt |
+| GET | `/borrows/{id}` | Chủ phiếu/Thủ thư | Xem chi tiết một phiếu mượn |
+| GET | `/borrows/admin/summary` | Thủ thư | Thống kê toàn hệ thống |
 | PATCH | `/borrows/{id}/renew` | Chủ phiếu/Thủ thư | Gia hạn phiếu chưa quá hạn |
 | PUT | `/borrows/{id}/return` | Chủ phiếu/Thủ thư | Trả sách và tự sinh phạt nếu trễ |
 | GET | `/borrows` | Thủ thư | Danh sách phân trang; lọc `status`, `readerId` |
 | GET | `/fines/my` | Đăng nhập | Danh sách phạt của mình |
+| GET | `/fines/my/summary` | Đăng nhập | Tổng hợp các khoản phạt cá nhân |
 | GET | `/fines` | Thủ thư | Danh sách phạt phân trang; lọc `paid` |
 | PATCH | `/fines/{id}/pay` | Thủ thư | Xác nhận đã thu tiền phạt |
 
@@ -38,4 +41,3 @@ tiếp service):
 mvn test
 mvn spring-boot:run
 ```
-

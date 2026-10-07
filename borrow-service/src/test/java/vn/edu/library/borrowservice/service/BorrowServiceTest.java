@@ -198,4 +198,15 @@ class BorrowServiceTest {
         assertThrows(IllegalStateException.class, () -> borrowService.renew(5L, 1L, false));
         verify(borrowRecordRepository, never()).save(any());
     }
+
+    @Test
+    void getById_nguoiKhacKhongDuocXem() {
+        BorrowRecord record = new BorrowRecord(5L, 1L, 10L, "Clean Code",
+                LocalDateTime.now(), LocalDate.now().plusDays(14), null,
+                BorrowRecord.BORROWING);
+        when(borrowRecordRepository.findById(5L)).thenReturn(Optional.of(record));
+
+        assertThrows(AccessDeniedException.class,
+                () -> borrowService.getById(5L, 2L, false));
+    }
 }

@@ -21,4 +21,16 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
 
     @Query("select coalesce(sum(f.amount), 0) from Fine f where f.readerId = :readerId and f.paid = false")
     long sumAmountByReaderIdAndPaidFalse(@Param("readerId") Long readerId);
+
+    long countByReaderId(Long readerId);
+
+    long countByReaderIdAndPaidTrue(Long readerId);
+
+    @Query("select coalesce(sum(f.amount), 0) from Fine f where f.readerId = :readerId and f.paid = true")
+    long sumAmountByReaderIdAndPaidTrue(@Param("readerId") Long readerId);
+
+    long countByPaidFalse();
+
+    @Query("select coalesce(sum(f.amount), 0) from Fine f where f.paid = false")
+    long sumAmountByPaidFalse();
 }

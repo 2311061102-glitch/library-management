@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import vn.edu.library.borrowservice.dto.FineDTO;
+import vn.edu.library.borrowservice.dto.FineSummaryDTO;
 import vn.edu.library.borrowservice.entity.Fine;
 import vn.edu.library.borrowservice.repository.FineRepository;
 
@@ -22,6 +23,19 @@ public class FineService {
         return fineRepository.findByReaderIdOrderByIdDesc(readerId).stream().map(this::toDTO).toList();
     }
 
+    public FineSummaryDTO getMySummary(Long readerId) {
+        long total = fineRepository.countByReaderId(readerId);
+        long unpaid = fineRepository.countByReaderIdAndPaidFalse(readerId);
+        long paid = fineRepository.countByReaderIdAndPaidTrue(readerId);
+        return new FineSummaryDTO(
+                total,
+                unpaid,
+                fineRepository.sumAmountByReaderIdAndPaidFalse(readerId),
+                paid,
+                fineRepository.sumAmountByReaderIdAndPaidTrue(readerId)
+        );
+    }
+
     /** Dành cho thủ thư: xem toàn bộ khoản phạt, lọc tùy chọn theo trạng thái thanh toán. */
     public Page<FineDTO> getAll(Boolean paid, Pageable pageable) {
         Page<Fine> page = (paid == null) ? fineRepository.findAll(pageable) : fineRepository.findByPaid(paid, pageable);
@@ -30,6 +44,9 @@ public class FineService {
 
     /** Thủ thư xác nhận độc giả đã nộp phạt. */
     public FineDTO pay(Long fineId) {
+        if (fineId == null || fineId <= 0) {
+            throw new IllegalArgumentException("id khoản phạt phải là số dương");
+        }
         Fine fine = fineRepository.findById(fineId)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy khoản phạt id = " + fineId));
         if (Boolean.TRUE.equals(fine.getPaid())) {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
 import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
+import vn.edu.library.borrowservice.dto.BorrowAdminSummaryDTO;
 import vn.edu.library.borrowservice.service.BorrowService;
 
 import java.util.List;
@@ -42,6 +43,11 @@ public class BorrowController {
         return borrowService.getMySummary(userId(authentication));
     }
 
+    @GetMapping("/admin/summary")
+    public BorrowAdminSummaryDTO getAdminSummary() {
+        return borrowService.getAdminSummary();
+    }
+
     // Chỉ thủ thư (đã chặn ở SecurityConfig): GET /borrows?status=BORROWING&page=0&size=10
     @GetMapping
     public Page<BorrowRecordDTO> getAll(
@@ -54,6 +60,11 @@ public class BorrowController {
     @PutMapping("/{id}/return")
     public BorrowRecordDTO returnBook(@PathVariable Long id, Authentication authentication) {
         return borrowService.returnBook(id, userId(authentication), isLibrarian(authentication));
+    }
+
+    @GetMapping("/{id}")
+    public BorrowRecordDTO getById(@PathVariable Long id, Authentication authentication) {
+        return borrowService.getById(id, userId(authentication), isLibrarian(authentication));
     }
 
     @PatchMapping("/{id}/renew")

@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.library.borrowservice.dto.FineDTO;
+import vn.edu.library.borrowservice.dto.FineSummaryDTO;
 import vn.edu.library.borrowservice.service.FineService;
 
 import java.util.List;
@@ -22,6 +23,11 @@ public class FineController {
     @GetMapping("/my")
     public List<FineDTO> getMyFines(Authentication authentication) {
         return fineService.getMyFines(BorrowController.userId(authentication));
+    }
+
+    @GetMapping("/my/summary")
+    public FineSummaryDTO getMySummary(Authentication authentication) {
+        return fineService.getMySummary(BorrowController.userId(authentication));
     }
 
     // Chỉ thủ thư: GET /fines?paid=false&page=0&size=10
