@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d9488" />
+    <meta
+      name="description"
+      content="Re-Book - mua bán và trao đổi sách cũ, lan tỏa tri thức."
+    />
+    <title>Re-Book | Thu mua & Trao đổi sách cũ</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Re-Book trang chủ">
+        <span class="brand-icon" aria-hidden="true">▣</span>
+        <span>RE-BOOK</span>
+      </a>
+      <label class="search">
+        <span class="visually-hidden">Tìm sách hoặc tác giả</span>
+        <input id="search-input" type="search" placeholder="Tìm kiếm sách, tác giả..." />
+        <span aria-hidden="true">⌕</span>
+      </label>
+      <div class="top-actions">
+        <button class="icon-button" id="cart-button" type="button" aria-label="Giỏ hàng">
+          ♧ <span id="cart-count" class="cart-count">0</span>
+        </button>
+        <button class="icon-button" id="account-button" type="button" aria-label="Tài khoản">◉</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <p class="eyebrow">ĐỌC SÁCH XANH · SỐNG Ý NGHĨA</p>
+          <h1>THU MUA &amp; TRAO ĐỔI SÁCH CŨ</h1>
+          <p class="hero-copy">
+            Trao đổi tri thức, tái sử dụng giá trị. Kết nối cộng đồng yêu sách toàn quốc.
+          </p>
+          <div class="hero-actions">
+            <button class="button button-primary" data-trade="BAN" type="button">
+              Bán sách cho chúng tôi
+            </button>
+            <button class="button button-light" data-trade="TRAO_DOI" type="button">
+              Trao đổi sách cho chúng tôi
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="catalog layout">
+        <aside class="category-panel">
+          <h2>Danh mục sách</h2>
+          <button class="category active" type="button" data-category="all">▤ <span>Tất cả sách</span></button>
+          <button class="category" type="button" data-category="Giáo khoa">⚑ <span>Sách giáo khoa</span></button>
+          <button class="category" type="button" data-category="Tiểu thuyết">▣ <span>Tiểu thuyết</span></button>
+          <button class="category" type="button" data-category="Kinh tế">⌁ <span>Kinh tế</span></button>
+          <button class="category" type="button" data-category="Kỹ thuật">⚙ <span>Kỹ thuật</span></button>
+          <button class="category" type="button" data-category="Tâm lý">◉ <span>Tâm lý</span></button>
+          <button class="category" type="button" data-category="Văn học">✎ <span>Văn học</span></button>
+          <button class="category" type="button" data-category="Truyện tranh">☻ <span>Truyện tranh</span></button>
+        </aside>
+
+        <div class="catalog-main">
+          <div class="catalog-toolbar">
+            <div>
+              <p class="eyebrow teal">SÁCH CŨ, GIÁ TRỊ MỚI</p>
+              <h2>Sách cũ mới</h2>
+            </div>
+            <div class="filters">
+              <label>
+                <span class="visually-hidden">Lọc theo tình trạng sách</span>
+                <select id="condition-filter">
+                  <option value="">Tình trạng sách</option>
+                  <option value="tot">Tốt</option>
+                  <option value="can doi">Cân đối</option>
+                  <option value="kha">Khá</option>
+                </select>
+              </label>
+              <label>
+                <span class="visually-hidden">Sắp xếp sách</span>
+                <select id="sort-books">
+                  <option value="default">Sắp xếp theo</option>
+                  <option value="price-asc">Giá: thấp đến cao</option>
+                  <option value="price-desc">Giá: cao đến thấp</option>
+                  <option value="title">Tên sách A-Z</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div id="book-grid" class="book-grid" aria-live="polite">
+            <p class="notice">Đang tải danh sách sách...</p>
+          </div>
+          <template id="book-card-template">
+            <article class="book-card">
+              <div class="book-cover">
+                <img class="book-image" alt="" loading="lazy" hidden />
+                <div class="cover-placeholder"></div>
+                <span class="condition-badge"></span>
+              </div>
+              <div class="book-info">
+                <h3 class="book-title"></h3>
+                <p class="book-author"></p>
+                <p class="book-category"></p>
+                <p class="book-price"></p>
+                <div class="card-actions">
+                  <button class="card-button" type="button" data-action="buy">Mua ngay</button>
+                  <button class="card-button filled" type="button" data-action="cart">Thêm vào giỏ</button>
+                </div>
+              </div>
+            </article>
+          </template>
+          <p id="empty-state" class="empty-state" hidden>Không tìm thấy sách phù hợp.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a class="brand footer-brand" href="/"><span class="brand-icon" aria-hidden="true">▣</span><span>Re-Book</span></a>
+      <nav aria-label="Liên kết chân trang">
+        <a href="#gioi-thieu">Giới thiệu</a>
+        <a href="mailto:contact@rebook.local">Liên hệ</a>
+        <a href="#dieu-khoan">Điều khoản sử dụng</a>
+        <a href="#bao-mat">Chính sách bảo mật</a>
+      </nav>
+      <p>Dự án trao đổi sách cũ · Cùng đọc, cùng sẻ chia</p>
+    </footer>
+
+    <dialog id="trade-dialog" class="trade-dialog">
+      <form id="listing-form">
+        <button class="dialog-close" id="close-dialog" type="button" aria-label="Đóng">×</button>
+        <p class="eyebrow teal">RE-BOOK · ĐĂNG TIN TRỰC TIẾP</p>
+        <h2 id="listing-heading">Đăng sách</h2>
+        <p class="dialog-copy">Tin sách sẽ hiển thị ngay sau khi bạn đăng.</p>
+        <label class="field-label" for="book-title">Tên sách</label>
+        <input id="book-title" name="title" required maxlength="255" />
+        <label class="field-label" for="book-author">Tác giả</label>
+        <input id="book-author" name="author" required maxlength="255" />
+        <label class="field-label" for="book-condition">Tình trạng sách</label>
+        <select id="book-condition" name="bookCondition" required>
+          <option value="">Chọn tình trạng</option>
+          <option value="Mới">Mới</option>
+          <option value="Tốt">Tốt</option>
+          <option value="Cân đối">Cân đối</option>
+          <option value="Khá">Khá</option>
+        </select>
+        <div id="price-field">
+          <label class="field-label" for="book-price">Giá bán (đồng)</label>
+          <input id="book-price" name="price" type="number" min="0" step="1000" placeholder="45000" />
+        </div>
+        <label class="field-label" for="book-category">Danh mục sách</label>
+        <select id="book-category" name="category" required>
+          <option value="">Chọn danh mục</option>
+          <option value="Giáo khoa">Sách giáo khoa</option>
+          <option value="Tiểu thuyết">Tiểu thuyết</option>
+          <option value="Kinh tế">Kinh tế</option>
+          <option value="Kỹ thuật">Kỹ thuật</option>
+          <option value="Tâm lý">Tâm lý</option>
+          <option value="Văn học">Văn học</option>
+          <option value="Truyện tranh">Truyện tranh</option>
+          <option value="Khác">Khác</option>
+        </select>
+        <label class="field-label" for="book-description">Mô tả / sách muốn đổi</label>
+        <textarea id="book-description" name="description" rows="3" maxlength="2000" placeholder="Thêm thông tin về sách hoặc tên sách bạn muốn đổi"></textarea>
+        <input id="listing-type" name="listingType" type="hidden" value="BAN" />
+        <p id="form-message" class="form-message" role="status"></p>
+        <button id="submit-listing" class="button button-primary submit-button" type="submit">Đăng sách ngay</button>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
