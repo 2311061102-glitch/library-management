@@ -24,3 +24,11 @@ mvn spring-boot:run
 ```
 
 Mỗi service có `pom.xml`, mã nguồn và cấu hình riêng trong thư mục tương ứng.
+
+## Làm việc theo nhóm
+
+Quy tắc phân công và quy trình tạo Pull Request nằm trong
+[`CONTRIBUTING.md`](CONTRIBUTING.md). CODEOWNERS bảo vệ
+`borrow-service/` và `library-frontend/`, là phạm vi do chủ repository phụ
+trách; các thành viên khác phát triển `auth-service/`, `book-service/` và
+`api-gateway/` trên nhánh riêng.
