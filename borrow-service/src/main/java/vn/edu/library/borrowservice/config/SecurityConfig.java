@@ -27,9 +27,9 @@ public class SecurityConfig {
                         // Quy tắc cụ thể đặt TRƯỚC quy tắc chung (khớp theo thứ tự)
                         .requestMatchers(HttpMethod.GET, "/borrows/my", "/borrows/my/summary",
                                 "/fines/my", "/fines/my/summary").authenticated()
-                        .requestMatchers("/reservations/**", "/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/reservations/*/ready").hasRole("LIBRARIAN")
                         .requestMatchers("/audit-logs/**").hasRole("LIBRARIAN")
+                        .requestMatchers("/reservations/**", "/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/borrows/admin/summary").hasRole("LIBRARIAN")
                         .requestMatchers(HttpMethod.PATCH, "/borrows/*/renew").authenticated()
