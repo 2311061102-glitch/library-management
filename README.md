@@ -28,7 +28,7 @@ Mỗi service có `pom.xml`, mã nguồn và cấu hình riêng trong thư mục
 ## Làm việc theo nhóm
 
 Quy tắc phân công và quy trình tạo Pull Request nằm trong
-[`CONTRIBUTING.md`](CONTRIBUTING.md). CODEOWNERS bảo vệ
-`borrow-service/` và `library-frontend/`, là phạm vi do chủ repository phụ
-trách; các thành viên khác phát triển `auth-service/`, `book-service/` và
-`api-gateway/` trên nhánh riêng.
+[`CONTRIBUTING.md`](CONTRIBUTING.md). CODEOWNERS bảo vệ riêng
+`borrow-service/`, là phạm vi do chủ repository phụ trách; các thành viên
+khác phát triển `auth-service/`, `book-service/`, `api-gateway/` và
+`library-frontend/` trên nhánh riêng.

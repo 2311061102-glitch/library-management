@@ -1,9 +1,9 @@
-# Chủ sở hữu các phần do chủ repository phụ trách.
+# Phần duy nhất do chủ repository phụ trách.
 /borrow-service/ @2311061102-glitch
-/library-frontend/ @2311061102-glitch
 
 # Thay các placeholder bên dưới bằng GitHub username của thành viên phụ trách
-# từng service khi nhóm thống nhất danh sách.
+# từng phần khi nhóm thống nhất danh sách.
 # /auth-service/ @member-auth
 # /book-service/ @member-book
 # /api-gateway/ @member-gateway
+# /library-frontend/ @member-frontend

@@ -8,7 +8,7 @@ phân công, không sửa trực tiếp service của thành viên khác.
 | Thư mục | Phạm vi |
 | --- | --- |
 | `borrow-service/` | Mượn, trả, gia hạn và tiền phạt — `@2311061102-glitch` |
-| `library-frontend/` | Giao diện của borrow-service — `@2311061102-glitch` |
+| `library-frontend/` | Dành cho thành viên phụ trách frontend |
 | `auth-service/` | Dành cho thành viên phụ trách auth |
 | `book-service/` | Dành cho thành viên phụ trách book |
 | `api-gateway/` | Dành cho thành viên phụ trách gateway |
@@ -33,8 +33,8 @@ git commit -m "Describe the service change"
 git push -u origin <branch-name>
 ```
 
-Mở Pull Request vào `main`. Pull Request chạm vào `borrow-service/` hoặc
-`library-frontend/` cần chủ repository review và approve. Không đưa thay đổi
+Mở Mở Pull Request vào `main`. Pull Request chạm vào `borrow-service/` cần chủ
+repository review và approve. Không đưa thay đổi
 của service khác vào cùng Pull Request nếu không thật sự cần thiết.
 
 ## Kiểm tra trước Pull Request
