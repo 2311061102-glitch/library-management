@@ -2,3 +2,6 @@ target/
 .idea/
 *.iml
 *.class
+node_modules/
+dist/
+.env
