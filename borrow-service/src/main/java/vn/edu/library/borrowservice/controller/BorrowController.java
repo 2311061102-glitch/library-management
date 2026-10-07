@@ -13,7 +13,9 @@ import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
 import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
 import vn.edu.library.borrowservice.dto.BorrowAdminSummaryDTO;
+import vn.edu.library.borrowservice.dto.ReturnBookRequestDTO;
 import vn.edu.library.borrowservice.service.BorrowService;
+import vn.edu.library.borrowservice.service.AuditService;
 
 import java.util.List;
 
@@ -23,11 +25,15 @@ import java.util.List;
 public class BorrowController {
 
     private final BorrowService borrowService;
+    private final AuditService auditService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BorrowRecordDTO borrow(@Valid @RequestBody BorrowRequestDTO dto, Authentication authentication) {
-        return borrowService.borrow(dto, userId(authentication), isLibrarian(authentication));
+        BorrowRecordDTO result = borrowService.borrow(dto, userId(authentication), isLibrarian(authentication));
+        auditService.record(userId(authentication), "BORROW", "BORROW_RECORD", result.getId(),
+                "bookId=" + result.getBookId());
+        return result;
     }
 
     @GetMapping("/my")
@@ -59,7 +65,19 @@ public class BorrowController {
 
     @PutMapping("/{id}/return")
     public BorrowRecordDTO returnBook(@PathVariable Long id, Authentication authentication) {
-        return borrowService.returnBook(id, userId(authentication), isLibrarian(authentication));
+        BorrowRecordDTO result = borrowService.returnBook(id, userId(authentication), isLibrarian(authentication));
+        auditService.record(userId(authentication), "RETURN", "BORROW_RECORD", id, "condition=GOOD");
+        return result;
+    }
+
+    @PutMapping("/{id}/return/details")
+    public BorrowRecordDTO returnBookWithDetails(@PathVariable Long id,
+                                                  @Valid @RequestBody ReturnBookRequestDTO request,
+                                                  Authentication authentication) {
+        BorrowRecordDTO result = borrowService.returnBook(id, request, userId(authentication), isLibrarian(authentication));
+        auditService.record(userId(authentication), "RETURN", "BORROW_RECORD", id,
+                "condition=" + request.getCondition());
+        return result;
     }
 
     @GetMapping("/{id}")
@@ -69,7 +87,9 @@ public class BorrowController {
 
     @PatchMapping("/{id}/renew")
     public BorrowRecordDTO renew(@PathVariable Long id, Authentication authentication) {
-        return borrowService.renew(id, userId(authentication), isLibrarian(authentication));
+        BorrowRecordDTO result = borrowService.renew(id, userId(authentication), isLibrarian(authentication));
+        auditService.record(userId(authentication), "RENEW", "BORROW_RECORD", id, null);
+        return result;
     }
 
     static Long userId(Authentication authentication) {

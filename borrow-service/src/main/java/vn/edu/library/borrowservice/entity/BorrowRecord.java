@@ -18,6 +18,8 @@ public class BorrowRecord {
 
     public static final String BORROWING = "BORROWING"; // đang mượn
     public static final String RETURNED = "RETURNED";   // đã trả
+    public static final String LOST = "LOST";
+    public static final String DAMAGED = "DAMAGED";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +51,12 @@ public class BorrowRecord {
 
     @Column(name = "renewal_count", nullable = false)
     private Integer renewalCount = 0;
+
+    @Column(name = "return_condition", length = 20)
+    private String returnCondition;
+
+    @Column(name = "return_note", length = 500)
+    private String returnNote;
 
     public BorrowRecord(Long id, Long readerId, Long bookId, String bookTitle,
                         LocalDateTime borrowDate, LocalDate dueDate,

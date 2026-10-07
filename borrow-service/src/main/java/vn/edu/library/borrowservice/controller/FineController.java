@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.library.borrowservice.dto.FineDTO;
 import vn.edu.library.borrowservice.dto.FineSummaryDTO;
 import vn.edu.library.borrowservice.service.FineService;
+import vn.edu.library.borrowservice.service.AuditService;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 public class FineController {
 
     private final FineService fineService;
+    private final AuditService auditService;
 
     @GetMapping("/my")
     public List<FineDTO> getMyFines(Authentication authentication) {
@@ -40,7 +42,9 @@ public class FineController {
 
     // Chỉ thủ thư: xác nhận đã thu tiền phạt
     @PatchMapping("/{id}/pay")
-    public FineDTO pay(@PathVariable Long id) {
-        return fineService.pay(id);
+    public FineDTO pay(@PathVariable Long id, Authentication authentication) {
+        FineDTO result = fineService.pay(id);
+        auditService.record(BorrowController.userId(authentication), "PAY_FINE", "FINE", id, null);
+        return result;
     }
 }

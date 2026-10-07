@@ -22,6 +22,17 @@ tiếp service):
 | GET | `/fines/my/summary` | Đăng nhập | Tổng hợp các khoản phạt cá nhân |
 | GET | `/fines` | Thủ thư | Danh sách phạt phân trang; lọc `paid` |
 | PATCH | `/fines/{id}/pay` | Thủ thư | Xác nhận đã thu tiền phạt |
+| POST | `/reservations` | Đăng nhập | Đặt trước một đầu sách |
+| GET | `/reservations/my` | Đăng nhập | Xem yêu cầu đặt trước của mình |
+| DELETE | `/reservations/{id}` | Chủ yêu cầu/Thủ thư | Hủy đặt trước |
+| PATCH | `/reservations/{id}/ready` | Thủ thư | Đánh dấu sách sẵn sàng, tạo thông báo |
+| GET | `/notifications/my` | Đăng nhập | Xem thông báo hạn trả, quá hạn, đặt trước |
+| GET | `/notifications/my/unread-count` | Đăng nhập | Đếm thông báo chưa đọc |
+| PATCH | `/notifications/{id}/read` | Chủ thông báo | Đánh dấu đã đọc |
+| GET | `/audit-logs` | Thủ thư | Xem nhật ký thao tác |
+
+Swagger UI: `/swagger-ui.html`. Job bảo trì chạy mỗi ngày lúc 02:00 để cập
+nhật phạt quá hạn, gửi nhắc hạn và hết hạn yêu cầu đặt trước.
 
 ## Quy tắc nghiệp vụ
 

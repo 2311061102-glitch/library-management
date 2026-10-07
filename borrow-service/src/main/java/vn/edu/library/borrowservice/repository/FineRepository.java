@@ -33,4 +33,6 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
 
     @Query("select coalesce(sum(f.amount), 0) from Fine f where f.paid = false")
     long sumAmountByPaidFalse();
+
+    java.util.Optional<Fine> findByBorrowRecordId(Long borrowRecordId);
 }

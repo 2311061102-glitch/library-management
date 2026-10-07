@@ -22,4 +22,6 @@ public class BorrowRecordDTO {
     private long estimatedFine;   // tiền phạt dự kiến (VND)
     private int renewalCount;
     private int remainingRenewals;
+    private String returnCondition;
+    private String returnNote;
 }

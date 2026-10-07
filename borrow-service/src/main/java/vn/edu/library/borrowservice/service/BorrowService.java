@@ -12,6 +12,7 @@ import vn.edu.library.borrowservice.dto.BorrowRecordDTO;
 import vn.edu.library.borrowservice.dto.BorrowRequestDTO;
 import vn.edu.library.borrowservice.dto.BorrowSummaryDTO;
 import vn.edu.library.borrowservice.dto.BorrowAdminSummaryDTO;
+import vn.edu.library.borrowservice.dto.ReturnBookRequestDTO;
 import vn.edu.library.borrowservice.entity.BorrowRecord;
 import vn.edu.library.borrowservice.entity.Fine;
 import vn.edu.library.borrowservice.repository.BorrowRecordRepository;
@@ -98,6 +99,12 @@ public class BorrowService {
      */
     @Transactional
     public BorrowRecordDTO returnBook(Long recordId, Long currentUserId, boolean librarian) {
+        return returnBook(recordId, new ReturnBookRequestDTO(), currentUserId, librarian);
+    }
+
+    @Transactional
+    public BorrowRecordDTO returnBook(Long recordId, ReturnBookRequestDTO request,
+                                      Long currentUserId, boolean librarian) {
         BorrowRecord record = borrowRecordRepository.findById(recordId)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy phiếu mượn id = " + recordId));
 
@@ -113,19 +120,26 @@ public class BorrowService {
 
         LocalDateTime now = LocalDateTime.now();
         record.setReturnDate(now);
-        record.setStatus(BorrowRecord.RETURNED);
+        String condition = request.getCondition() == null ? "GOOD" : request.getCondition().trim().toUpperCase();
+        if (!List.of("GOOD", "DAMAGED", "LOST").contains(condition)) {
+            throw new IllegalArgumentException("condition phải là GOOD, DAMAGED hoặc LOST");
+        }
+        record.setReturnCondition(condition);
+        record.setReturnNote(request.getNote());
+        record.setStatus("LOST".equals(condition) ? BorrowRecord.LOST
+                : "DAMAGED".equals(condition) ? BorrowRecord.DAMAGED : BorrowRecord.RETURNED);
         borrowRecordRepository.save(record);
 
         int overdueDays = FineCalculator.overdueDays(record.getDueDate(), now.toLocalDate());
         if (overdueDays > 0) {
-            Fine fine = new Fine();
+            Fine fine = fineRepository.findByBorrowRecordId(record.getId()).orElseGet(Fine::new);
             fine.setBorrowRecord(record);
             fine.setReaderId(record.getReaderId());
             fine.setOverdueDays(overdueDays);
             fine.setAmount(FineCalculator.fineAmount(overdueDays, finePerDay));
             fine.setReason("Trả sách trễ " + overdueDays + " ngày");
-            fine.setPaid(false);
-            fine.setCreatedAt(now);
+            if (fine.getPaid() == null) fine.setPaid(false);
+            if (fine.getCreatedAt() == null) fine.setCreatedAt(now);
             fineRepository.save(fine);
         }
         return toDTO(record);
@@ -241,7 +255,9 @@ public class BorrowService {
                 overdueDays,
                 FineCalculator.fineAmount(overdueDays, finePerDay),
                 renewalCount,
-                Math.max(0, maxRenewals - renewalCount)
+                Math.max(0, maxRenewals - renewalCount),
+                r.getReturnCondition(),
+                r.getReturnNote()
         );
     }
 }
