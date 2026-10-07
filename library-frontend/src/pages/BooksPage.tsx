@@ -18,7 +18,7 @@ export default function BooksPage() {
     const [categoryId, setCategoryId] = useState<number | undefined>();
     const [page, setPage] = useState(0);
     const [borrowingId, setBorrowingId] = useState<number | null>(null);
-    const { user } = useAuth();
+    const { isAuthenticated } = useAuth();
     const { toast, showToast, clearToast } = useToast();
 
     const { categories } = useCategories();
@@ -55,7 +55,7 @@ export default function BooksPage() {
                 state={state}
                 errorMessage={errorMessage}
                 onRetry={refetch}
-                onBorrow={user?.role === 'READER' ? handleBorrow : undefined}
+                onBorrow={isAuthenticated ? handleBorrow : undefined}
                 borrowingId={borrowingId}
             />
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
